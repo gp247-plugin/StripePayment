@@ -1,0 +1,17 @@
+{
+    "name": "Stripe Payment",
+    "image": "images/stripe.svg",
+    "auth": "GP247",
+    "email": "support@gp247.net",
+    "link": "https://github.com/gp247net/StripePayment",
+    "configGroup": "Plugins",
+    "configCode": "Payment",
+    "configKey": "StripePayment",
+    "version": "1.0.0",
+    "requireCore": ["3.0"],
+    "requireUpdateFrom": "1.0.0",
+    "requireComposerPackages": ["gp247/shop"],
+    "requireGp247Extensions": [],
+    "requireLivewire": false,
+    "storeScope": "store"
+}
