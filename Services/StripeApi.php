@@ -57,6 +57,21 @@ class StripeApi
     }
 
     /**
+     * POST /v1/refunds
+     *
+     * @param array<string, mixed> $params         payment_intent, amount (minor units), metadata.
+     * @param string               $idempotencyKey Same key + same params returns the same refund.
+     * @return array<string, mixed> The Refund object.
+     * @throws StripeApiException
+     *
+     * @aidlc-story US-stripe-payment-payment-request
+     */
+    public function createRefund(array $params, string $idempotencyKey): array
+    {
+        return $this->send('post', '/v1/refunds', $params, ['Idempotency-Key' => $idempotencyKey]);
+    }
+
+    /**
      * GET /v1/checkout/sessions/{id}
      *
      * @param string $sessionId cs_…

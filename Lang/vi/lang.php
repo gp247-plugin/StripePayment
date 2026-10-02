@@ -24,4 +24,8 @@ return [
     'section_live_hint' => 'Stripe Dashboard ở chế độ Live → Developers → API keys / Webhooks. Thanh toán thật — chỉ nhập khoá sk_live_ / rk_live_.',
     'section_order_status' => 'Trạng thái đơn hàng',
     'section_in_use' => 'Đang dùng',
+    'payreq_line' => 'Yêu cầu thanh toán #:id',
+    'payreq_paid' => 'Cảm ơn bạn — đã nhận được thanh toán.',
+    'payreq_processing' => 'Cảm ơn bạn — thanh toán đang được xử lý. Trang này sẽ hiện "đã thanh toán" khi Stripe xác nhận.',
+    'payreq_error' => 'Không xác nhận được thanh toán này. Nếu đã bị trừ tiền, vui lòng liên hệ cửa hàng.',
 ];

@@ -24,4 +24,8 @@ return [
     'section_live_hint' => 'Stripe Dashboard in Live mode → Developers → API keys / Webhooks. Real payments — only sk_live_ / rk_live_ keys belong here.',
     'section_order_status' => 'Order status',
     'section_in_use' => 'In use',
+    'payreq_line' => 'Payment request #:id',
+    'payreq_paid' => 'Thank you — your payment was received.',
+    'payreq_processing' => 'Thank you — your payment is being processed. This page will show it as paid once Stripe confirms it.',
+    'payreq_error' => 'We could not confirm this payment. If you were charged, please contact the store.',
 ];

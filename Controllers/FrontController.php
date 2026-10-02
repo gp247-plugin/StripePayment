@@ -7,6 +7,7 @@ use App\GP247\Plugins\StripePayment\Services\StripeAmount;
 use App\GP247\Plugins\StripePayment\Services\StripeApi;
 use App\GP247\Plugins\StripePayment\Services\StripeApiException;
 use App\GP247\Plugins\StripePayment\Services\StripeFulfillment;
+use App\GP247\Plugins\StripePayment\Services\StripePaymentRequestFulfillment;
 use App\GP247\Plugins\StripePayment\Services\WebhookSignature;
 use GP247\Front\Controllers\RootFrontController;
 use GP247\Shop\Controllers\ShopCartController;
@@ -24,6 +25,7 @@ use Illuminate\Http\Request;
  * @aidlc-unit plugin-stripe-payment
  * @aidlc-story US-stripe-payment-hosted-checkout
  * @aidlc-story US-stripe-payment-webhook-fulfillment
+ * @aidlc-story US-stripe-payment-payment-request
  * @aidlc-adr stripe-payment_hosted-checkout-no-sdk
  */
 class FrontController extends RootFrontController
@@ -148,6 +150,56 @@ class FrontController extends RootFrontController
     }
 
     /**
+     * Payer is back from paying a core payment request. The session id in the URL is
+     * untrusted: the session is read from Stripe with this storefront's key and must name
+     * a request of this storefront's store; the money is recorded idempotently (the
+     * webhook usually got there first) and the payer goes back to the link's page.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     *
+     * @aidlc-story US-stripe-payment-payment-request
+     */
+    public function paymentRequestReturn(Request $request)
+    {
+        $home = redirect(gp247_route_front('front.home'));
+        $sessionId = (string) $request->query('session_id', '');
+        $storeId = (string) config('app.storeId', GP247_STORE_ID_ROOT);
+        if ($sessionId === '' || !StripePaymentRequestFulfillment::supported()) {
+            return $home->with('error', $this->lang('payreq_error'));
+        }
+
+        try {
+            $session = (new StripeApi(stripepayment_secret_key($storeId)))->retrieveCheckoutSession($sessionId);
+        } catch (StripeApiException $e) {
+            gp247_report('StripePayment: retrieve payment request session ' . $sessionId . ' failed: ' . $e->stripeCode() . ': ' . $e->getMessage());
+            return $home->with('error', $this->lang('payreq_error'));
+        }
+
+        $requests = new StripePaymentRequestFulfillment();
+        $paymentRequest = $requests->requestOf($session);
+        if ($paymentRequest === null || (string) $paymentRequest->store_id !== $storeId) {
+            gp247_report('StripePayment: return for session ' . $sessionId . ' does not match a payment request of store ' . $storeId);
+            return $home->with('error', $this->lang('payreq_error'));
+        }
+
+        $back = app(\GP247\Shop\Payment\PaymentRequestService::class)->publicUrl($paymentRequest);
+        $target = $back !== null ? redirect()->away($back) : $home;
+        if (($session['status'] ?? '') !== 'complete') {
+            return $target->with('error', $this->lang('error_not_paid'));
+        }
+
+        try {
+            $movement = $requests->fulfillSession($session);
+        } catch (\Throwable $e) {
+            gp247_report('StripePayment: recording payment request ' . $paymentRequest->id . ' on return failed: ' . $e->getMessage());
+            return $target->with('error', $this->lang('payreq_error'));
+        }
+
+        return $target->with('success', $this->lang($movement !== null ? 'payreq_paid' : 'payreq_processing'));
+    }
+
+    /**
      * Stripe webhook. Reads the RAW body (the signature covers the exact bytes), answers 400
      * to anything unsigned, 200 once handled or deliberately ignored, 500 only on an
      * unexpected error so Stripe retries.
@@ -168,20 +220,31 @@ class FrontController extends RootFrontController
         }
         $object = is_array($event['data']['object'] ?? null) ? $event['data']['object'] : [];
         $fulfillment = new StripeFulfillment();
+        $requests = new StripePaymentRequestFulfillment();
+        // A session opened for a core payment request (pay link) is not an order's.
+        $forRequest = !empty($object['metadata']['payment_request_id']);
 
         try {
             switch ($event['type']) {
                 case 'checkout.session.completed':
                 case 'checkout.session.async_payment_succeeded':
-                    $fulfillment->fulfillSession($object);
+                    $forRequest ? $requests->fulfillSession($object) : $fulfillment->fulfillSession($object);
                     break;
                 case 'checkout.session.async_payment_failed':
-                    $fulfillment->markAsyncFailed($object);
+                    if ($forRequest) {
+                        gp247_report('StripePayment: delayed payment failed for payment request ' . $object['metadata']['payment_request_id'] . ' (session ' . ($object['id'] ?? '?') . ')');
+                    } else {
+                        $fulfillment->markAsyncFailed($object);
+                    }
                     break;
                 case 'refund.created':
                 case 'refund.updated':
                 case 'refund.failed':
-                    $fulfillment->syncRefund($object, $event['type']);
+                    // A refund of a payment request's PaymentIntent is handled there; any
+                    // other goes to the order path as before.
+                    if ($requests->syncRefund($object, $event['type']) === null) {
+                        $fulfillment->syncRefund($object, $event['type']);
+                    }
                     break;
                 default:
                     // Not an event this plugin acts on.

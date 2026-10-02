@@ -19,6 +19,11 @@ if (gp247_extension_check_active($config['configGroup'], $config['configKey'])) 
                 ->name('stripe-payment.success');
             Route::get('cancel', [\App\GP247\Plugins\StripePayment\Controllers\FrontController::class, 'cancel'])
                 ->name('stripe-payment.cancel');
+            // Back from paying a core payment request (pay link): read from Stripe, recorded
+            // idempotently, then back to the link's page.
+            Route::get('payment-request/return', [\App\GP247\Plugins\StripePayment\Controllers\FrontController::class, 'paymentRequestReturn'])
+                ->middleware('throttle:30,1')
+                ->name('stripe-payment.payment_request.return');
         }
     );
 

@@ -13,10 +13,10 @@ card details never pass through your website.
 | | |
 | --- | --- |
 | **Plugin** | StripePayment |
-| **Version** | 1.0.0 |
+| **Version** | 1.1.0 |
 | **Developer** | GP247 |
 | **License** | Free |
-| **Requires** | GP247 Core **3.0.3+** (per-store config + at-rest secret encryption) · package `gp247/shop` |
+| **Requires** | GP247 Core **3.1+** (per-store config, at-rest secret encryption, payment requests) · package `gp247/shop` |
 | **Does not need** | Extra Composer packages, cron, queue workers |
 
 ## What it does
@@ -41,6 +41,17 @@ card details never pass through your website.
 | Stripe collected a different amount than the order total | Records what was actually collected, notes the difference, and does **not** mark the order paid |
 
 ---
+
+## Payment links (payment requests)
+
+From **1.1.0**, with a `gp247/shop` that has the **Payment requests** screen, Stripe also collects money **outside the cart** — the balance of an order, a receivable, a deposit, a free-form invoice:
+
+1. The admin creates a request to collect in **Payment requests**, clicks **Create payment link** and sends the link to the customer.
+2. The customer opens the link, picks **Stripe**, pays on Stripe's page and comes back to the link's page with a confirmation.
+3. The money is recorded on the request **exactly once** (the webhook and the return page may both arrive).
+4. Refunds: on a collected line, click **Refund via gateway** (needs the money-out permission). Refunds made directly in the Stripe Dashboard are recorded on the request too.
+
+Nothing more to configure: same keys, same webhook (the events listed below). Stripe only shows on the link's page when the **store that owns the request** has a secret key — the money always goes to that store's Stripe account.
 
 ## Installation
 
@@ -175,4 +186,5 @@ expiry date and any CVC. More test cards are in Stripe's *Testing* documentation
 
 ## Version history
 
+- **1.1.0** — Stripe collects and refunds the **payment requests** of `gp247/shop` (payment links `/pay/…`), with the keys of the store that owns the request. On a shop without that feature the plugin behaves as 1.0.0. Requires GP247 Core 3.1+.
 - **1.0.0** — First release: Stripe Checkout, signed webhooks, refund sync, per-store settings, encrypted secrets.

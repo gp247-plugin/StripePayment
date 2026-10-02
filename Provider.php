@@ -19,6 +19,11 @@ if (gp247_extension_check_active($config['configGroup'], $config['configKey'])) 
         require_once __DIR__.'/function.php';
     }
 
+    // Stripe also collects / refunds the core's payment requests (pay links).
+    if (function_exists('stripepayment_register_payment_gateway')) {
+        stripepayment_register_payment_gateway();
+    }
+
     if (class_exists(\Livewire\Livewire::class)) {
         \Livewire\Livewire::addNamespace('StripePayment', classNamespace: 'App\\GP247\\Plugins\\StripePayment\\Livewire');
     }

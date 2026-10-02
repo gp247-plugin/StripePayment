@@ -13,10 +13,10 @@ tin thẻ không bao giờ đi qua website của bạn.
 | | |
 | --- | --- |
 | **Plugin** | StripePayment |
-| **Phiên bản** | 1.0.0 |
+| **Phiên bản** | 1.1.0 |
 | **Nhà phát triển** | GP247 |
 | **Giấy phép** | Miễn phí |
-| **Yêu cầu** | GP247 Core **3.0.3+** (cấu hình theo cửa hàng + mã hoá khoá bí mật) · package `gp247/shop` |
+| **Yêu cầu** | GP247 Core **3.1+** (cấu hình theo cửa hàng, mã hoá khoá bí mật, yêu cầu thanh toán) · package `gp247/shop` |
 | **Không cần** | Composer package mới, cron, queue |
 
 ## Tính năng
@@ -41,6 +41,17 @@ tin thẻ không bao giờ đi qua website của bạn.
 | Số tiền Stripe thu khác tổng đơn | Ghi đúng số thực thu, ghi chú lệch, **không** đánh dấu đã thanh toán |
 
 ---
+
+## Link thanh toán (Yêu cầu thanh toán)
+
+Từ **1.1.0**, với `gp247/shop` có màn **Yêu cầu thanh toán**, Stripe còn thu được các khoản **ngoài giỏ hàng** — trả nốt đơn, công nợ, đặt cọc, hoá đơn tự do:
+
+1. Admin tạo yêu cầu thu trong **Yêu cầu thanh toán**, bấm **Tạo link thanh toán** và gửi link cho khách.
+2. Khách mở link, chọn **Stripe**, trả trên trang Stripe; Stripe đưa khách về lại trang link với thông báo đã nhận tiền.
+3. Tiền được ghi vào yêu cầu **đúng một lần** (webhook và trang quay về có thể cùng tới).
+4. Hoàn tiền: trên dòng tiền đã thu, bấm **Hoàn qua cổng** (cần quyền chi tiền). Hoàn làm trực tiếp trên Stripe Dashboard cũng được ghi về yêu cầu.
+
+Không cần cấu hình thêm: dùng cùng khoá và cùng webhook (các sự kiện đã đăng ký ở mục dưới). Stripe chỉ hiện trên trang link khi **cửa hàng sở hữu yêu cầu** đã có secret key — tiền luôn vào đúng tài khoản Stripe của cửa hàng đó.
 
 ## Cài đặt
 
@@ -169,5 +180,6 @@ tương lai, CVC bất kỳ. Xem thêm thẻ thử tại tài liệu Stripe (*Te
 
 ## Lịch sử phiên bản
 
+- **1.1.0** — Stripe thu và hoàn tiền cho **Yêu cầu thanh toán** của `gp247/shop` (link thanh toán `/pay/…`), dùng khoá của cửa hàng sở hữu yêu cầu. Shop chưa có tính năng này thì plugin chạy như 1.0.0. Yêu cầu GP247 Core 3.1+.
 - **1.0.0** — Phát hành đầu tiên: Stripe Checkout, webhook có chữ ký, đồng bộ hoàn tiền, cấu hình theo cửa hàng, mã
   hoá khoá bí mật.
