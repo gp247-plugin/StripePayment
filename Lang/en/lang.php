@@ -28,4 +28,20 @@ return [
     'payreq_paid' => 'Thank you — your payment was received.',
     'payreq_processing' => 'Thank you — your payment is being processed. This page will show it as paid once Stripe confirms it.',
     'payreq_error' => 'We could not confirm this payment. If you were charged, please contact the store.',
+
+    // Check before use (readiness)
+    'ready_payment_off' => 'The payment step is off: shoppers do not see Stripe at checkout.',
+    'ready_payment_on' => 'The payment step is on at checkout.',
+    'fix_order_tab' => 'Shop configuration → Order',
+    'ready_plugin_off' => 'Stripe is not enabled for this store: shoppers do not see it at checkout.',
+    'ready_plugin_on' => 'Stripe is enabled for this store.',
+    'fix_plugins' => 'Extension → Plugins',
+    'ready_secret_key_missing' => 'The secret key of the :mode block is not set: shoppers cannot pay with Stripe.',
+    'ready_secret_key_ok' => 'The secret key of the :mode block is set.',
+    'ready_webhook_secret_missing' => 'The webhook signing secret of the :mode block is not set: money is still recorded when the shopper comes back to the shop, but delayed payments, shoppers who close the page first and refunds made on Stripe will not reach the order.',
+    'ready_webhook_secret_ok' => 'The webhook signing secret of the :mode block is set.',
+    'ready_test_mode_on' => 'Sandbox mode is on: shoppers only make test payments and no real money is taken. Turn it off to sell.',
+    'ready_test_mode_off' => 'Live mode is on (real payments).',
+    'ready_webhook_local' => 'The webhook URL uses a local domain Stripe cannot reach: money is only recorded when the shopper comes back to the shop.',
+    'ready_webhook_ok' => 'The webhook URL is on a public domain.',
 ];

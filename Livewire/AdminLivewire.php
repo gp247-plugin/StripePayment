@@ -4,7 +4,9 @@
 namespace App\GP247\Plugins\StripePayment\Livewire;
 
 use GP247\Core\AdminShell\Infrastructure\ConfigForm;
+use GP247\Core\AdminShell\Infrastructure\ReadinessCheck;
 use GP247\Core\Models\AdminConfig;
+use GP247\Shop\Payment\PaymentSettings;
 use GP247\Shop\Models\ShopOrderStatus;
 
 /**
@@ -15,10 +17,12 @@ use GP247\Shop\Models\ShopOrderStatus;
  * inherited value at a sub-store scope. storeScoped() gives the root admin the store
  * picker (multi-store: one Stripe account per store; marketplace: stores inherit the
  * owner's account). The screen stays owner-only because Provider.php does not register it
- * as a store-scoped segment.
+ * as a store-scoped segment. Above the form, "Check before use" lists what still stops
+ * shoppers from paying with Stripe (readiness(), local settings only).
  *
  * @aidlc-unit plugin-stripe-payment
  * @aidlc-story US-stripe-payment-per-store-credentials
+ * @aidlc-story US-stripe-payment-config-readiness
  */
 class AdminLivewire extends ConfigForm
 {
@@ -168,5 +172,122 @@ class AdminLivewire extends ConfigForm
             self::PREFIX . 'secret_key_live' => 'sk_live_… / rk_live_…',
             self::PREFIX . 'webhook_secret_live' => 'whsec_…',
         ];
+    }
+
+    /**
+     * What the store still needs before shoppers can pay with Stripe: the payment step at
+     * checkout, the plugin on for the store, the secret key of the mode in use, and — so
+     * money that clears later or is refunded on Stripe reaches the order — the webhook
+     * secret and a public webhook URL. Test mode is a warning. Local settings only: the
+     * keys themselves are only checked by Stripe at payment time.
+     *
+     * @return array<int, ReadinessCheck>
+     *
+     * @aidlc-unit plugin-stripe-payment
+     * @aidlc-story US-stripe-payment-config-readiness
+     * @aidlc-story US-admin-shell-config-form-readiness
+     */
+    protected function readiness(): array
+    {
+        $store = $this->readinessStoreId();
+        $t = static fn (string $key, array $replace = []): string => (string) trans('Plugins/StripePayment::lang.' . $key, $replace);
+        // WHY '' = test: an unsaved row falls back to config.php, whose default is test mode.
+        $testMode = !in_array($this->saved(self::PREFIX . 'test_mode', $store), ['0'], true);
+        $suffix = $testMode ? 'test' : 'live';
+        $section = $t($testMode ? 'section_sandbox' : 'section_live');
+        $webhookHost = (string) parse_url(function_exists('stripepayment_webhook_url') ? stripepayment_webhook_url() : '', PHP_URL_HOST);
+
+        return [
+            ...$this->shopChecks($store, $t),
+            ReadinessCheck::failIf($this->saved(self::PREFIX . 'secret_key_' . $suffix, $store) === '', 'stripe_secret_key',
+                $t('ready_secret_key_missing', ['mode' => $section]), ReadinessCheck::ERROR, '', $section, $t('ready_secret_key_ok', ['mode' => $section])),
+            ReadinessCheck::failIf($this->saved(self::PREFIX . 'webhook_secret_' . $suffix, $store) === '', 'stripe_webhook_secret',
+                $t('ready_webhook_secret_missing', ['mode' => $section]), ReadinessCheck::WARNING, '', $section, $t('ready_webhook_secret_ok', ['mode' => $section])),
+            ReadinessCheck::failIf($testMode, 'stripe_test_mode', $t('ready_test_mode_on'),
+                ReadinessCheck::WARNING, '', $t('section_mode'), $t('ready_test_mode_off')),
+            ReadinessCheck::failIf(self::isLocalHost($webhookHost), 'stripe_webhook_public', $t('ready_webhook_local'),
+                ReadinessCheck::WARNING, '', '', $t('ready_webhook_ok')),
+        ];
+    }
+
+    /**
+     * The shop-side conditions — the payment step at checkout and this plugin on for the
+     * store — from gp247/shop, so every payment plugin shows the same thing. An older
+     * gp247/shop without PaymentSettings::readiness() gets the same two checks computed here.
+     *
+     * @param string   $store Store being checked.
+     * @param \Closure $t     Translator of this plugin's strings.
+     * @return array<int, ReadinessCheck> payment_enabled, provider_enabled.
+     *
+     * @aidlc-story US-payment-request-plugin-readiness-check
+     */
+    private function shopChecks(string $store, \Closure $t): array
+    {
+        if (method_exists(PaymentSettings::class, 'readiness')) {
+            return PaymentSettings::readiness($store, 'StripePayment');
+        }
+
+        return [
+            ReadinessCheck::failIf(in_array($this->saved('use_payment', $store), ['', '0'], true), 'payment_enabled', $t('ready_payment_off'),
+                ReadinessCheck::ERROR, self::adminUrl('admin_config.index'), $t('fix_order_tab'), $t('ready_payment_on')),
+            ReadinessCheck::failIf($this->saved('StripePayment', $store, 'Plugins') !== '1', 'provider_enabled', $t('ready_plugin_off'),
+                ReadinessCheck::ERROR, self::adminUrl('admin_plugin.index'), $t('fix_plugins'), $t('ready_plugin_on')),
+        ];
+    }
+
+    /**
+     * A setting read straight from admin_config: the store row, else the GLOBAL row.
+     *
+     * WHY not gp247_config(): it caches the rows for the whole request, so right after a
+     * save the box would still show the values from before it.
+     *
+     * @param string      $key   admin_config key.
+     * @param string      $store Store id.
+     * @param string|null $group admin_config group (null = any).
+     * @return string Trimmed value, '' when unset.
+     */
+    private function saved(string $key, string $store, ?string $group = null): string
+    {
+        $global = (string) (defined('GP247_STORE_ID_GLOBAL') ? GP247_STORE_ID_GLOBAL : 0);
+        foreach (array_unique([$store, $global]) as $scope) {
+            $row = AdminConfig::where('key', $key)->where('store_id', $scope)
+                ->when($group !== null, static fn ($q) => $q->where('group', $group))->first();
+            if ($row !== null && trim((string) $row->value) !== '') {
+                return trim((string) $row->value);
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * @param string $route Admin route name.
+     * @return string URL, or '' when the route is not registered.
+     */
+    private static function adminUrl(string $route): string
+    {
+        return \Illuminate\Support\Facades\Route::has($route) ? (string) gp247_route_admin($route) : '';
+    }
+
+    /**
+     * @param string $host Host of the webhook URL.
+     * @return bool Stripe cannot call it back (local name or private address).
+     */
+    private static function isLocalHost(string $host): bool
+    {
+        $host = strtolower(trim($host, '[]'));
+        if ($host === '' || $host === 'localhost') {
+            return true;
+        }
+        foreach (['.local', '.localhost', '.test', '.internal', '.lan'] as $suffix) {
+            if (str_ends_with($host, $suffix)) {
+                return true;
+            }
+        }
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            return filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false;
+        }
+
+        return false;
     }
 }

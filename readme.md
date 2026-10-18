@@ -13,7 +13,7 @@ card details never pass through your website.
 | | |
 | --- | --- |
 | **Plugin** | StripePayment |
-| **Version** | 1.1.0 |
+| **Version** | 1.1.1 |
 | **Developer** | GP247 |
 | **License** | Free |
 | **Requires** | GP247 Core **3.1+** (per-store config, at-rest secret encryption, payment requests) · package `gp247/shop` |
@@ -186,5 +186,6 @@ expiry date and any CVC. More test cards are in Stripe's *Testing* documentation
 
 ## Version history
 
+- **1.1.1** — The settings screen opens with a **Check before use** box: what still stops shoppers from paying with Stripe (payment step off at checkout, Stripe off for the store, missing secret key or webhook signing secret of the mode in use, a webhook URL Stripe cannot reach) and a reminder while Sandbox mode is on — each with where to fix it. Needs a GP247 Core that has this box; older cores show the screen as before.
 - **1.1.0** — Stripe collects and refunds the **payment requests** of `gp247/shop` (payment links `/pay/…`), with the keys of the store that owns the request. On a shop without that feature the plugin behaves as 1.0.0. Requires GP247 Core 3.1+.
 - **1.0.0** — First release: Stripe Checkout, signed webhooks, refund sync, per-store settings, encrypted secrets.

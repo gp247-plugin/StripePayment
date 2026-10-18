@@ -13,7 +13,7 @@ tin thẻ không bao giờ đi qua website của bạn.
 | | |
 | --- | --- |
 | **Plugin** | StripePayment |
-| **Phiên bản** | 1.1.0 |
+| **Phiên bản** | 1.1.1 |
 | **Nhà phát triển** | GP247 |
 | **Giấy phép** | Miễn phí |
 | **Yêu cầu** | GP247 Core **3.1+** (cấu hình theo cửa hàng, mã hoá khoá bí mật, yêu cầu thanh toán) · package `gp247/shop` |
@@ -180,6 +180,7 @@ tương lai, CVC bất kỳ. Xem thêm thẻ thử tại tài liệu Stripe (*Te
 
 ## Lịch sử phiên bản
 
+- **1.1.1** — Màn cấu hình có khung **Kiểm tra trước khi dùng**: những gì còn khiến khách chưa trả được bằng Stripe (bước thanh toán đang tắt ở checkout, Stripe chưa bật cho cửa hàng, thiếu Secret key hoặc Webhook signing secret của chế độ đang dùng, URL webhook Stripe không gọi tới được) và lời nhắc khi đang ở Sandbox — kèm chỗ sửa. Cần GP247 Core có khung này; core cũ hiển thị màn như trước.
 - **1.1.0** — Stripe thu và hoàn tiền cho **Yêu cầu thanh toán** của `gp247/shop` (link thanh toán `/pay/…`), dùng khoá của cửa hàng sở hữu yêu cầu. Shop chưa có tính năng này thì plugin chạy như 1.0.0. Yêu cầu GP247 Core 3.1+.
 - **1.0.0** — Phát hành đầu tiên: Stripe Checkout, webhook có chữ ký, đồng bộ hoàn tiền, cấu hình theo cửa hàng, mã
   hoá khoá bí mật.

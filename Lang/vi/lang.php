@@ -28,4 +28,20 @@ return [
     'payreq_paid' => 'Cảm ơn bạn — đã nhận được thanh toán.',
     'payreq_processing' => 'Cảm ơn bạn — thanh toán đang được xử lý. Trang này sẽ hiện "đã thanh toán" khi Stripe xác nhận.',
     'payreq_error' => 'Không xác nhận được thanh toán này. Nếu đã bị trừ tiền, vui lòng liên hệ cửa hàng.',
+
+    // Check before use (readiness)
+    'ready_payment_off' => 'Bước chọn phương thức thanh toán đang tắt: khách không thấy Stripe ở checkout.',
+    'ready_payment_on' => 'Bước chọn phương thức thanh toán đang bật ở checkout.',
+    'fix_order_tab' => 'Cấu hình cửa hàng → Đơn hàng',
+    'ready_plugin_off' => 'Stripe chưa bật cho cửa hàng này: khách không thấy Stripe ở checkout.',
+    'ready_plugin_on' => 'Stripe đang bật cho cửa hàng này.',
+    'fix_plugins' => 'Phần mở rộng → Tiện ích',
+    'ready_secret_key_missing' => 'Chưa nhập Secret key của khối :mode: khách không thanh toán được bằng Stripe.',
+    'ready_secret_key_ok' => 'Đã có Secret key của khối :mode.',
+    'ready_webhook_secret_missing' => 'Chưa nhập Webhook signing secret của khối :mode: tiền vẫn được ghi khi khách quay lại cửa hàng, nhưng thanh toán về chậm, khách đóng trang trước khi quay lại và hoàn tiền làm trên Stripe sẽ không về đơn.',
+    'ready_webhook_secret_ok' => 'Đã có Webhook signing secret của khối :mode.',
+    'ready_test_mode_on' => 'Đang dùng chế độ Sandbox: khách chỉ thanh toán thử, không trừ tiền thật. Tắt khi bán thật.',
+    'ready_test_mode_off' => 'Đang dùng chế độ Live (thanh toán thật).',
+    'ready_webhook_local' => 'URL webhook đang dùng tên miền nội bộ, Stripe không gọi tới được: chỉ ghi được tiền khi khách quay lại cửa hàng.',
+    'ready_webhook_ok' => 'URL webhook là tên miền công khai.',
 ];
