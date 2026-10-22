@@ -7,7 +7,7 @@
     "configGroup": "Plugins",
     "configCode": "Payment",
     "configKey": "StripePayment",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "requireCore": ["3.1"],
     "requireUpdateFrom": "1.0.0",
     "requireComposerPackages": ["gp247/shop"],
