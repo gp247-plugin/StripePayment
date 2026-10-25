@@ -119,7 +119,7 @@ class FrontController extends RootFrontController
         // placed and the webhook records the money when it clears.
         (new StripeFulfillment())->fulfillSession($session);
 
-        return (new ShopCartController)->completeOrder();
+        return $this->cartController()->completeOrder();
     }
 
     /**
@@ -139,14 +139,14 @@ class FrontController extends RootFrontController
 
         if ($order !== null && (float) $order->received > 0) {
             // Paid after all: finish the checkout instead of undoing it.
-            return (new ShopCartController)->completeOrder();
+            return $this->cartController()->completeOrder();
         }
         if ($order !== null && (int) $order->status !== ShopOrderStatus::NEW) {
             gp247_report('StripePayment: cancel link refused for order ' . $order->id . ' in status ' . $order->status);
             return redirect(gp247_route_front('front.home'))->with('error', $this->lang('error_cannot_cancel'));
         }
 
-        return (new ShopCartController)->cancelOrder();
+        return $this->cartController()->cancelOrder();
     }
 
     /**
@@ -319,11 +319,24 @@ class FrontController extends RootFrontController
      */
     private function abandon(string $message)
     {
-        return (new ShopCartController)->cancelOrder()->with('error', $message);
+        return $this->cartController()->cancelOrder()->with('error', $message);
     }
 
     private function lang(string $key, array $replace = []): string
     {
         return (string) trans('Plugins/StripePayment::lang.' . $key, $replace);
+    }
+
+    /**
+     * The shop cart controller that finishes or cancels the order — the site's own
+     * override (app/GP247/Shop/Controllers/ShopCartController.php) when one exists.
+     *
+     * @return ShopCartController
+     */
+    private function cartController(): ShopCartController
+    {
+        $class = gp247_namespace(ShopCartController::class);
+
+        return new $class();
     }
 }
