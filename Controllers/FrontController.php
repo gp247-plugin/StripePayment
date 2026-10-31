@@ -151,9 +151,11 @@ class FrontController extends RootFrontController
 
     /**
      * Payer is back from paying a core payment request. The session id in the URL is
-     * untrusted: the session is read from Stripe with this storefront's key and must name
-     * a request of this storefront's store; the money is recorded idempotently (the
-     * webhook usually got there first) and the payer goes back to the link's page.
+     * untrusted: the session is read from Stripe with the key of the request it was opened
+     * for (a store this domain serves — a marketplace vendor store without a domain is
+     * served by ROOT) and must name a request this domain serves; the money is recorded
+     * idempotently (the webhook usually got there first) and the payer goes back to the
+     * link's page.
      *
      * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
@@ -169,8 +171,13 @@ class FrontController extends RootFrontController
             return $home->with('error', $this->lang('payreq_error'));
         }
 
+        // WHY look the request up first: its own store's key opened the session (a vendor store
+        // may have its own Stripe account); an unknown session falls back to this domain's key.
+        $known = \GP247\Shop\Payment\Models\PaymentRequest::where('gateway', 'StripePayment')->where('gateway_ref', $sessionId)->first();
+        $keyStore = $known !== null && $this->servedHere($known, $storeId) ? (string) $known->store_id : $storeId;
+
         try {
-            $session = (new StripeApi(stripepayment_secret_key($storeId)))->retrieveCheckoutSession($sessionId);
+            $session = (new StripeApi(stripepayment_secret_key($keyStore)))->retrieveCheckoutSession($sessionId);
         } catch (StripeApiException $e) {
             gp247_report('StripePayment: retrieve payment request session ' . $sessionId . ' failed: ' . $e->stripeCode() . ': ' . $e->getMessage());
             return $home->with('error', $this->lang('payreq_error'));
@@ -178,7 +185,7 @@ class FrontController extends RootFrontController
 
         $requests = new StripePaymentRequestFulfillment();
         $paymentRequest = $requests->requestOf($session);
-        if ($paymentRequest === null || (string) $paymentRequest->store_id !== $storeId) {
+        if ($paymentRequest === null || !$this->servedHere($paymentRequest, $storeId)) {
             gp247_report('StripePayment: return for session ' . $sessionId . ' does not match a payment request of store ' . $storeId);
             return $home->with('error', $this->lang('payreq_error'));
         }
@@ -338,5 +345,23 @@ class FrontController extends RootFrontController
         $class = gp247_namespace(ShopCartController::class);
 
         return new $class();
+    }
+
+    /**
+     * Whether this domain (store $storeId) serves the payment request: its own store, or
+     * ROOT for a store without a domain (shop servingStoreId; same store check on an older shop).
+     *
+     * @param \GP247\Shop\Payment\Models\PaymentRequest $paymentRequest
+     * @param string                                     $storeId Store of this domain.
+     * @return bool
+     */
+    private function servedHere($paymentRequest, string $storeId): bool
+    {
+        $owner = (string) $paymentRequest->store_id;
+        $served = method_exists(\GP247\Shop\Payment\PaymentRequestService::class, 'servingStoreId')
+            ? \GP247\Shop\Payment\PaymentRequestService::servingStoreId($owner)
+            : $owner;
+
+        return $served === $storeId;
     }
 }

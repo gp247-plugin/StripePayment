@@ -121,6 +121,31 @@ class StripePaymentRequestGateway implements PaymentGateway
      * @return RefundResult
      * @throws StripeApiException
      */
+    /**
+     * Order status of a checkout order (REST API) once paid in full / fully refunded: the
+     * statuses this plugin's website payment step sets (shop OrderStatusAfterPayment; declared
+     * without `implements` so the plugin still loads on a shop that predates it).
+     *
+     * @param string $event   'paid' | 'refunded'.
+     * @param string $storeId Store of the payment request.
+     * @return int|null
+     *
+     * @aidlc-story US-stripe-payment-payment-request
+     */
+    public function orderStatusAfter(string $event, string $storeId): ?int
+    {
+        $key = match ($event) {
+            'paid' => 'order_status_success',
+            'refunded' => 'order_status_refunded',
+            default => null,
+        };
+        // WHY no ShopOrderStatus default: a payment request gateway stays free of the shop's
+        // order domain (PaymentRequestKernelIsolationTest); the install seeds both settings.
+        $status = $key === null ? 0 : (int) stripepayment_config($key, 0, $storeId);
+
+        return $status > 0 ? $status : null;
+    }
+
     public function refund(PaymentRequest $request, PaymentMovement $original, float $amount, ?string $idempotencyKey = null): RefundResult
     {
         $currency = strtolower((string) $request->currency);

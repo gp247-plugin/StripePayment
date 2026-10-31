@@ -13,7 +13,7 @@ card details never pass through your website.
 | | |
 | --- | --- |
 | **Plugin** | StripePayment |
-| **Version** | 1.1.3 |
+| **Version** | 1.1.4 |
 | **Developer** | GP247 |
 | **License** | Free |
 | **Requires** | GP247 Core **3.1+** (per-store config, at-rest secret encryption, payment requests) · package `gp247/shop` |
@@ -186,6 +186,7 @@ expiry date and any CVC. More test cards are in Stripe's *Testing* documentation
 
 ## Version history
 
+- **1.1.4** — An order placed through the REST API (gp247/shop 3.5.1) and paid with Stripe moves to the "success" / "refunded" status like a website order; the return page accepts a payment request of a store without its own domain (single-domain multi-vendor marketplace) when opened on the main domain.
 - **1.1.3** — After a Stripe payment (return to the shop or cancel), the order is finished or cancelled through the site's own `ShopCartController` when the site overrides it in `app/GP247/Shop/Controllers/` — custom order-completion code is no longer skipped. Needs a GP247 Core with `gp247_namespace()` (3.1 or newer).
 - **1.1.2** — Japanese (日本語) translation of the plugin screens.
 - **1.1.1** — The settings screen opens with a **Check before use** box: what still stops shoppers from paying with Stripe (payment step off at checkout, Stripe off for the store, missing secret key or webhook signing secret of the mode in use, a webhook URL Stripe cannot reach) and a reminder while Sandbox mode is on — each with where to fix it. Needs a GP247 Core that has this box; older cores show the screen as before.

@@ -13,7 +13,7 @@ tin thẻ không bao giờ đi qua website của bạn.
 | | |
 | --- | --- |
 | **Plugin** | StripePayment |
-| **Phiên bản** | 1.1.3 |
+| **Phiên bản** | 1.1.4 |
 | **Nhà phát triển** | GP247 |
 | **Giấy phép** | Miễn phí |
 | **Yêu cầu** | GP247 Core **3.1+** (cấu hình theo cửa hàng, mã hoá khoá bí mật, yêu cầu thanh toán) · package `gp247/shop` |
@@ -180,6 +180,7 @@ tương lai, CVC bất kỳ. Xem thêm thẻ thử tại tài liệu Stripe (*Te
 
 ## Lịch sử phiên bản
 
+- **1.1.4** — Đơn đặt qua REST API (gp247/shop 3.5.1) trả qua Stripe chuyển sang trạng thái "thành công" / "đã hoàn" như đơn web; trang quay về nhận yêu cầu thanh toán của gian hàng không có tên miền riêng (sàn nhiều người bán một tên miền) khi mở trên tên miền chính.
 - **1.1.3** — Sau khi thanh toán Stripe (quay về cửa hàng hoặc huỷ), đơn được hoàn tất hoặc huỷ qua `ShopCartController` của chính site nếu site ghi đè nó trong `app/GP247/Shop/Controllers/` — code hoàn tất đơn tuỳ biến không còn bị bỏ qua. Cần GP247 Core có `gp247_namespace()` (3.1 trở lên).
 - **1.1.2** — Thêm bản dịch tiếng Nhật (日本語) cho các màn của plugin.
 - **1.1.1** — Màn cấu hình có khung **Kiểm tra trước khi dùng**: những gì còn khiến khách chưa trả được bằng Stripe (bước thanh toán đang tắt ở checkout, Stripe chưa bật cho cửa hàng, thiếu Secret key hoặc Webhook signing secret của chế độ đang dùng, URL webhook Stripe không gọi tới được) và lời nhắc khi đang ở Sandbox — kèm chỗ sửa. Cần GP247 Core có khung này; core cũ hiển thị màn như trước.
