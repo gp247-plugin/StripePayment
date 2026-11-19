@@ -15,7 +15,7 @@ tin thẻ không bao giờ đi qua website của bạn.
 | **Plugin** | StripePayment |
 | **Phiên bản** | 1.1.4 |
 | **Nhà phát triển** | GP247 |
-| **Giấy phép** | Miễn phí |
+| **Giấy phép** | Miễn phí · mã nguồn mở, [MIT](./LICENSE) |
 | **Yêu cầu** | GP247 Core **3.1+** (cấu hình theo cửa hàng, mã hoá khoá bí mật, yêu cầu thanh toán) · package `gp247/shop` |
 | **Không cần** | Composer package mới, cron, queue |
 

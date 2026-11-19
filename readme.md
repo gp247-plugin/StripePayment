@@ -15,7 +15,7 @@ card details never pass through your website.
 | **Plugin** | StripePayment |
 | **Version** | 1.1.4 |
 | **Developer** | GP247 |
-| **License** | Free |
+| **License** | Free · open source, [MIT](./LICENSE) |
 | **Requires** | GP247 Core **3.1+** (per-store config, at-rest secret encryption, payment requests) · package `gp247/shop` |
 | **Does not need** | Extra Composer packages, cron, queue workers |
 
